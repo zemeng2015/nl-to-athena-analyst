@@ -1,0 +1,44 @@
+{
+  "table_schema": {
+    "catalog": "AwsDataCatalog",
+    "database": "analytics",
+    "table": "loan_performance",
+    "description": "Mortgage loan delinquency, borrower risk, and balance metrics",
+    "columns": [
+      {
+        "name": "loan_id",
+        "type": "varchar",
+        "description": "Unique loan identifier"
+      },
+      {
+        "name": "delinquency_rate",
+        "type": "double",
+        "description": "Loan delinquency rate"
+      },
+      {
+        "name": "current_balance",
+        "type": "double",
+        "description": "Current unpaid principal balance"
+      },
+      {
+        "name": "risk_band",
+        "type": "varchar",
+        "description": "Borrower risk category"
+      }
+    ],
+    "sample_rows": [
+      {
+        "loan_id": "loan-1",
+        "delinquency_rate": 0.02,
+        "current_balance": 310000,
+        "risk_band": "low"
+      },
+      {
+        "loan_id": "loan-2",
+        "delinquency_rate": 0.04,
+        "current_balance": 450000,
+        "risk_band": "moderate"
+      }
+    ]
+  }
+}
