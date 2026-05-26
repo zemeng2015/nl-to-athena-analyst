@@ -10,48 +10,32 @@ This project highlights the intersection of AI engineering, data engineering, an
 
 Built a natural-language analytics assistant that translates business questions into governed Athena SQL with schema retrieval, query safety checks, execution tracing, and result explanation.
 
-## Core Capabilities
+## Architecture
+
+```mermaid
+flowchart LR
+    Schema[POST /schemas] --> Registry[Schema registry]
+    Question[POST /query] --> Retrieve[Schema retrieval]
+    Registry --> Retrieve
+    Retrieve --> Generate[SQL generator]
+    Generate --> Safety[SQL safety validator]
+    Safety --> Mock[Local Athena mock]
+    Mock --> Response[Rows + explanation]
+    Response --> Trace[GET /runs/run_id]
+```
+
+## Implemented
 
 - Retrieve relevant schemas and data dictionary entries.
 - Generate Athena SQL from natural language.
 - Validate SQL before execution.
 - Estimate query cost and enforce limits.
-- Explain results with charts and caveats.
-- Evaluate SQL accuracy against a golden dataset.
-
-## Current Implementation
-
-This first version is a governed, local-first Athena analyst. It does not require
-AWS credentials, but it models the production workflow: schema registration,
-schema retrieval, SQL generation, SQL safety validation, mock execution, and
-run tracing.
-
-- `POST /schemas` registers table schemas, column descriptions, and sample rows.
-- `GET /schemas` lists registered schemas by catalog and database.
-- `POST /query` retrieves relevant schemas, generates Athena SQL, validates it,
-  executes against a local Athena mock, and explains the result.
-- `GET /runs/{run_id}` returns the generated SQL, retrieved tables, validation
-  notes, rows, and latency.
+- Explain results with generated SQL and returned rows.
+- Trace generated SQL, retrieved tables, validation notes, rows, and latency.
 - SQL safety blocks DDL/DML, multiple statements, non-SELECT queries, and queries
   without `LIMIT`.
 - Tests cover safety validation, schema retrieval, SQL generation, mock Athena
   execution, and API traces.
-
-## Suggested Stack
-
-- Backend: FastAPI, Pydantic
-- SQL parsing: sqlglot
-- AWS: Athena, Glue Catalog, S3
-- AI: OpenAI API or AWS Bedrock
-- Evaluation: exact SQL checks plus result-set comparison
-
-## Milestones
-
-1. Build schema registry and retrieval.
-2. Add SQL generation prompt and safety validation.
-3. Add Athena adapter interface with local mock.
-4. Add result explanation.
-5. Add SQL accuracy eval suite.
 
 ## Local Development
 
@@ -100,7 +84,29 @@ Inspect the run trace:
 Invoke-RestMethod -Uri "http://127.0.0.1:8000/runs/$($result.run_id)"
 ```
 
-## Next Milestones
+## Example Response
+
+```json
+{
+  "sql": "SELECT AVG(delinquency_rate) AS average_delinquency_rate FROM analytics.loan_performance LIMIT 100",
+  "safe": true,
+  "rows": [
+    {
+      "average_delinquency_rate": 0.03
+    }
+  ],
+  "row_count": 1
+}
+```
+
+## Interview Talking Points
+
+- Shows how to put governance around natural-language analytics instead of blindly executing model-generated SQL.
+- Uses schema retrieval and data dictionary metadata to ground SQL generation.
+- Validates generated SQL with `sqlglot`, blocks unsafe statements, and requires bounded `LIMIT` queries.
+- Local Athena mock makes the workflow testable without AWS credentials while preserving the production adapter boundary.
+
+## Roadmap
 
 1. Add OpenAI or Bedrock SQL generation with schema-grounded prompts.
 2. Add stricter governance: table allowlists, column masking, and cost limits.
